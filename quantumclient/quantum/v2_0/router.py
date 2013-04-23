@@ -95,6 +95,25 @@ class UpdateRouter(UpdateCommand):
     log = logging.getLogger(__name__ + '.UpdateRouter')
     resource = 'router'
 
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--route', metavar='destination=CIDR,nexthop=IP_ADDR',
+            action='append', dest='routes', type=utils.str2dict,
+            help='register an extra route to the router '
+            '(This option can be repeated)')
+        parser.add_argument(
+            '--no-routes',
+            default=False, action='store_true',
+            help='remove all extra routes from the router')
+
+    def args2body(self, parsed_args):
+        body = {}
+        if parsed_args.routes:
+            body['routes'] = parsed_args.routes
+        elif parsed_args.no_routes:
+            body['routes'] = []
+        return {'router': body}
+
 
 class RouterInterfaceCommand(QuantumCommand):
     """Based class to Add/Remove router interface."""
