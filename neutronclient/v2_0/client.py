@@ -207,6 +207,9 @@ class Client(object):
     metering_label_path = "/metering/metering-labels/%s"
     metering_label_rules_path = "/metering/metering-label-rules"
     metering_label_rule_path = "/metering/metering-label-rules/%s"
+    packet_filters_path = "/packet_filters"
+    packet_filter_path = "/packet_filters/%s"
+
     DHCP_NETS = '/dhcp-networks'
     DHCP_AGENTS = '/dhcp-agents'
     L3_ROUTERS = '/l3-routers'
@@ -243,7 +246,8 @@ class Client(object):
                      'firewall_policies': 'firewall_policy',
                      'firewalls': 'firewall',
                      'metering_labels': 'metering_label',
-                     'metering_label_rules': 'metering_label_rule'
+                     'metering_label_rules': 'metering_label_rule',
+                     'packet_filters': 'packet_filter',
                      }
     # 8192 Is the default max URI len for eventlet.wsgi.server
     MAX_URI_LEN = 8192
@@ -1109,6 +1113,33 @@ class Client(object):
         """Fetches information of a certain metering label rule."""
         return self.get(self.metering_label_rule_path %
                         (metering_label_rule), params=_params)
+
+    @APIParamsCall
+    def create_packet_filter(self, body=None):
+        """Create a new packet filter."""
+        return self.post(self.packet_filters_path, body=body)
+
+    @APIParamsCall
+    def update_packet_filter(self, packet_filter_id, body=None):
+        """Update a packet filter."""
+        return self.put(self.packet_filter_path % packet_filter_id, body=body)
+
+    @APIParamsCall
+    def list_packet_filters(self, retrieve_all=True, **_params):
+        """Fetch a list of all packet filters for a tenant."""
+        return self.list('packet_filters', self.packet_filters_path,
+                         retrieve_all, **_params)
+
+    @APIParamsCall
+    def show_packet_filter(self, packet_filter_id, **_params):
+        """Fetch information of a certain packet filter."""
+        return self.get(self.packet_filter_path % packet_filter_id,
+                        params=_params)
+
+    @APIParamsCall
+    def delete_packet_filter(self, packet_filter_id):
+        """Delete the specified packet filter."""
+        return self.delete(self.packet_filter_path % packet_filter_id)
 
     def __init__(self, **kwargs):
         """Initialize a new client for the Neutron v2.0 API."""

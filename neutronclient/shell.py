@@ -42,6 +42,7 @@ from neutronclient.neutron.v2_0.lb import member as lb_member
 from neutronclient.neutron.v2_0.lb import pool as lb_pool
 from neutronclient.neutron.v2_0.lb import vip as lb_vip
 from neutronclient.neutron.v2_0 import metering
+from neutronclient.neutron.v2_0.nec import packetfilter
 from neutronclient.neutron.v2_0 import network
 from neutronclient.neutron.v2_0 import networkprofile
 from neutronclient.neutron.v2_0.nsx import networkgateway
@@ -259,6 +260,11 @@ COMMAND_V2 = {
     'meter-label-rule-list': metering.ListMeteringLabelRule,
     'meter-label-rule-show': metering.ShowMeteringLabelRule,
     'meter-label-rule-delete': metering.DeleteMeteringLabelRule,
+    'packet-filter-list': packetfilter.ListPacketFilter,
+    'packet-filter-show': packetfilter.ShowPacketFilter,
+    'packet-filter-create': packetfilter.CreatePacketFilter,
+    'packet-filter-update': packetfilter.UpdatePacketFilter,
+    'packet-filter-delete': packetfilter.DeletePacketFilter,
 }
 
 COMMANDS = {'2.0': COMMAND_V2}
