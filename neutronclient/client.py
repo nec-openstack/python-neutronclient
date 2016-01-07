@@ -23,6 +23,8 @@ import os
 
 from keystoneauth1 import access
 from keystoneauth1 import adapter
+from keystoneauth1 import session as ks_session
+import os_client_config
 import requests
 
 from neutronclient._i18n import _
@@ -45,6 +47,9 @@ MAX_URI_LEN = 8192
 
 class HTTPClient(object):
     """Handles the REST calls and responses, include authn."""
+
+    # TODO(amotoki): Drop keystone auth support.
+    # SessionClient is now used for neutronclient.v2_0.client.Client.
 
     USER_AGENT = 'python-neutronclient'
     CONTENT_TYPE = 'application/json'
@@ -361,6 +366,7 @@ def construct_http_client(username=None,
                           ca_cert=None,
                           service_type='network',
                           session=None,
+                          cloud=None,
                           **kwargs):
 
     if session:
@@ -370,7 +376,43 @@ def construct_http_client(username=None,
                              service_type=service_type,
                              region_name=region_name,
                              **kwargs)
+    elif auth_strategy == 'keystone':
+        # TODO(amotoki): support token and endpoint_url
+        # NOTE: Ignore log_credentials. Use the default behavior of Session.
+        if cloud is None:
+            cloud = ''
+        verify = kwargs.get('verify', not insecure)
+        cert = kwargs.get('cert', ca_cert)
+        kwargs.setdefault('interface', endpoint_type)
+        cloud_config = os_client_config.OpenStackConfig().get_one_cloud(
+            cloud=cloud,
+            username=username,
+            user_id=user_id,
+            tenant_name=tenant_name,
+            tenant_id=tenant_id,
+            password=password,
+            auth_url=auth_url,
+            region_name=region_name,
+            verify=verify,
+            cert=ca_cert,
+            **kwargs)
+        verify, cert = cloud_config.get_requests_verify_args()
+        auth = cloud_config.get_auth()
+        auth_session = ks_session.Session(auth=auth,
+                                          verify=verify,
+                                          cert=cert,
+                                          timeout=timeout)
+
+        kwargs.setdefault('interface', endpoint_type)
+        kwargs.setdefault('user_agent', 'python-neutronclient')
+        kwargs.setdefault('service_name', 'neutron')
+        return SessionClient(session=auth_session,
+                             service_type=service_type,
+                             region_name=region_name,
+                             **kwargs)
+
     else:
+        # auth_strategy == noauth
         # FIXME(bklei): username and password are now optional. Need
         # to test that they were provided in this mode.  Should also
         # refactor to use kwargs.
