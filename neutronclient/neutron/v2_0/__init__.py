@@ -420,7 +420,7 @@ class NeutronCommand(command.OpenStackCommand):
         return self.resource
 
     def get_client(self):
-        return self.app.client_manager.neutron
+        return self.app.client
 
     def get_parser(self, prog_name):
         parser = super(NeutronCommand, self).get_parser(prog_name)

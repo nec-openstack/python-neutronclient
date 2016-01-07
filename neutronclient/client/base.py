@@ -11,9 +11,6 @@
 #    under the License.
 #
 
-from keystoneauth1 import session as ks_session
-import os_client_config
-
 from neutronclient.client import httpclient
 from neutronclient.client import sessionclient
 
@@ -37,7 +34,9 @@ def construct_http_client(username=None,
                           ca_cert=None,
                           service_type='network',
                           session=None,
+                          # os-client-config
                           cloud=None,
+                          argparse=None,
                           **kwargs):
 
     if session:
@@ -47,47 +46,6 @@ def construct_http_client(username=None,
                                            service_type=service_type,
                                            region_name=region_name,
                                            **kwargs)
-    elif auth_strategy == 'keystone':
-        # NOTE: Ignore log_credentials. Use the default behavior of Session.
-        if cloud is None:
-            cloud = ''
-        verify = kwargs.get('verify', not insecure)
-        cert = kwargs.get('cert', ca_cert)
-
-        config_params = kwargs.copy()
-        config_params.setdefault('interface', endpoint_type)
-        if token and endpoint_url:
-            config_params.setdefault('auth_type', 'admin_token')
-            config_params['url'] = endpoint_url
-            config_params['token'] = token
-
-        cloud_config = os_client_config.OpenStackConfig().get_one_cloud(
-            cloud=cloud,
-            username=username,
-            user_id=user_id,
-            tenant_name=tenant_name,
-            tenant_id=tenant_id,
-            password=password,
-            auth_url=auth_url,
-            region_name=region_name,
-            verify=verify,
-            cert=ca_cert,
-            **config_params)
-        verify, cert = cloud_config.get_requests_verify_args()
-        auth = cloud_config.get_auth()
-        auth_session = ks_session.Session(auth=auth,
-                                          verify=verify,
-                                          cert=cert,
-                                          timeout=timeout)
-
-        kwargs.setdefault('interface', endpoint_type)
-        kwargs.setdefault('user_agent', 'python-neutronclient')
-        kwargs.setdefault('service_name', 'neutron')
-        return sessionclient.SessionClient(session=auth_session,
-                                           service_type=service_type,
-                                           region_name=region_name,
-                                           **kwargs)
-
     else:
         # auth_strategy == noauth
         # FIXME(bklei): username and password are now optional. Need

@@ -27,15 +27,13 @@ import logging
 import os
 import sys
 
-from keystoneauth1 import session
-import os_client_config
 from oslo_utils import encodeutils
 
 from cliff import app
 from cliff import commandmanager
 
 from neutronclient._i18n import _
-from neutronclient.common import clientmanager
+from neutronclient import client
 from neutronclient.common import command as openstack_command
 from neutronclient.common import exceptions as exc
 from neutronclient.common import extension as client_extension
@@ -834,29 +832,17 @@ class NeutronShell(app.App):
         Make sure the user has provided all of the authentication
         info we need.
         """
-        cloud_config = os_client_config.OpenStackConfig().get_one_cloud(
-            cloud=self.options.os_cloud, argparse=self.options,
-            network_api_version=self.api_version)
-        verify, cert = cloud_config.get_requests_verify_args()
-        auth = cloud_config.get_auth()
-
-        auth_session = session.Session(
-            auth=auth, verify=verify, cert=cert,
-            timeout=self.options.http_timeout)
-
         interface = self.options.os_endpoint_type or self.endpoint_type
         if interface.endswith('URL'):
             interface = interface[:-3]
-        self.client_manager = clientmanager.ClientManager(
+        self.client = client.Client(
+            api_version=self.api_version['network'],
+            cloud=self.options.os_cloud,
+            argparse=self.options,
             retries=self.options.retries,
             raise_errors=False,
-            session=auth_session,
-            region_name=cloud_config.get_region_name(),
-            api_version=cloud_config.get_api_version('network'),
-            service_type=cloud_config.get_service_type('network'),
-            service_name=cloud_config.get_service_name('network'),
+            timeout=self.options.http_timeout,
             endpoint_type=interface,
-            auth=auth,
             log_credentials=True)
         return
 

@@ -23,11 +23,9 @@ import netaddr
 import os
 
 from oslo_utils import encodeutils
-from oslo_utils import importutils
 import six
 
 from neutronclient._i18n import _
-from neutronclient.common import exceptions
 
 
 def env(*vars, **kwargs):
@@ -44,26 +42,6 @@ def env(*vars, **kwargs):
 
 def convert_to_uppercase(string):
     return string.upper()
-
-
-def get_client_class(api_name, version, version_map):
-    """Returns the client class for the requested API version.
-
-    :param api_name: the name of the API, e.g. 'compute', 'image', etc
-    :param version: the requested API version
-    :param version_map: a dict of client classes keyed by version
-    :rtype: a client class for the requested API version
-    """
-    try:
-        client_path = version_map[str(version)]
-    except (KeyError, ValueError):
-        msg = _("Invalid %(api_name)s client version '%(version)s'. must be "
-                "one of: %(map_keys)s")
-        msg = msg % {'api_name': api_name, 'version': version,
-                     'map_keys': ', '.join(version_map.keys())}
-        raise exceptions.UnsupportedVersion(msg)
-
-    return importutils.import_class(client_path)
 
 
 def get_item_properties(item, fields, mixed_case_fields=(), formatters=None):
