@@ -14,52 +14,9 @@
 #    under the License.
 #
 
-from neutronclient.common import utils
+from neutronclient.client import *  # noqa
 
 
-API_NAME = 'network'
-API_VERSIONS = {
-    '2.0': 'neutronclient.v2_0.client.Client',
-    '2': 'neutronclient.v2_0.client.Client',
-}
-
-
-def make_client(instance):
-    """Returns an neutron client."""
-    neutron_client = utils.get_client_class(
-        API_NAME,
-        instance._api_version[API_NAME],
-        API_VERSIONS,
-    )
-    instance.initialize()
-    url = instance._url
-    url = url.rstrip("/")
-    client = neutron_client(username=instance._username,
-                            tenant_name=instance._tenant_name,
-                            password=instance._password,
-                            region_name=instance._region_name,
-                            auth_url=instance._auth_url,
-                            endpoint_url=url,
-                            endpoint_type=instance._endpoint_type,
-                            token=instance._token,
-                            auth_strategy=instance._auth_strategy,
-                            insecure=instance._insecure,
-                            ca_cert=instance._ca_cert,
-                            retries=instance._retries,
-                            raise_errors=instance._raise_errors,
-                            session=instance._session,
-                            auth=instance._auth)
-    return client
-
-
-def Client(api_version, *args, **kwargs):
-    """Return an neutron client.
-
-    @param api_version: only 2.0 is supported now
-    """
-    neutron_client = utils.get_client_class(
-        API_NAME,
-        api_version,
-        API_VERSIONS,
-    )
-    return neutron_client(*args, **kwargs)
+__all__ = [
+    'Client',
+]
