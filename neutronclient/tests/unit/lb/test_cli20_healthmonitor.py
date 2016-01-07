@@ -16,8 +16,6 @@
 
 import sys
 
-from mox3 import mox
-
 from neutronclient.neutron.v2_0.lb import healthmonitor
 from neutronclient.tests.unit import test_cli20
 
@@ -150,7 +148,7 @@ class CLITestV20LbHealthmonitorJSON(test_cli20.CLITestV20Base):
         args = [health_monitor_id, pool_id]
 
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
 
         body = {resource: {'id': health_monitor_id}}
@@ -160,11 +158,10 @@ class CLITestV20LbHealthmonitorJSON(test_cli20.CLITestV20Base):
         path = getattr(self.client,
                        "associate_pool_health_monitors_path") % pool_id
         return_tup = (test_cli20.MyResp(200), result_str)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.end_url(path), 'POST',
             body=test_cli20.MyComparator(body, self.client),
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', test_cli20.TOKEN)).AndReturn(return_tup)
+        ).AndReturn(return_tup)
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser('test_' + resource)
         parsed_args = cmd_parser.parse_args(args)
@@ -182,18 +179,17 @@ class CLITestV20LbHealthmonitorJSON(test_cli20.CLITestV20Base):
         args = [health_monitor_id, pool_id]
 
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
 
         path = (getattr(self.client,
                         "disassociate_pool_health_monitors_path") %
                 {'pool': pool_id, 'health_monitor': health_monitor_id})
         return_tup = (test_cli20.MyResp(204), None)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.end_url(path), 'DELETE',
             body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', test_cli20.TOKEN)).AndReturn(return_tup)
+        ).AndReturn(return_tup)
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser('test_' + resource)
         parsed_args = cmd_parser.parse_args(args)

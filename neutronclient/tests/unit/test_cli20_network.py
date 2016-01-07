@@ -167,7 +167,7 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
         resources = "networks"
         cmd = network.ListNetwork(test_cli20.MyApp(sys.stdout), None)
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         self.mox.StubOutWithMock(network.ListNetwork, "extend_list")
         network.ListNetwork.extend_list(mox.IsA(list), mox.IgnoreArg())
         cmd.get_client().MultipleTimes().AndReturn(self.client)
@@ -177,15 +177,11 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
         query = "id=myfakeid"
         args = ['-c', 'id', '--', '--id', 'myfakeid']
         path = getattr(self.client, resources + "_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(test_cli20.end_url(path, query),
                                        self.client),
             'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token',
-                test_cli20.TOKEN)).AndReturn(
-                    (test_cli20.MyResp(200), resstr))
+            body=None).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + resources)
         shell.run_command(cmd, cmd_parser, args)
@@ -260,17 +256,15 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
             resstr = self.client.serialize(reses)
             resp = (test_cli20.MyResp(200), resstr)
             path = getattr(self.client, resources + '_path')
-            self.client.httpclient.request(
+            self.client.httpclient.do_request(
                 test_cli20.MyUrlComparator(
                     test_cli20.end_url(path, query), self.client),
                 'GET',
-                body=None,
-                headers=mox.ContainsKeyValue(
-                    'X-Auth-Token', test_cli20.TOKEN)).AndReturn(resp)
+                body=None).AndReturn(resp)
 
         cmd = network.ListNetwork(test_cli20.MyApp(sys.stdout), None)
         self.mox.StubOutWithMock(cmd, 'get_client')
-        self.mox.StubOutWithMock(self.client.httpclient, 'request')
+        self.mox.StubOutWithMock(self.client.httpclient, 'do_request')
         cmd.get_client().AndReturn(self.client)
         setup_list_stub('networks', data, '')
         cmd.get_client().AndReturn(self.client)
@@ -362,7 +356,7 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
         resources = "networks"
         cmd = network.ListExternalNetwork(test_cli20.MyApp(sys.stdout), None)
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         self.mox.StubOutWithMock(network.ListNetwork, "extend_list")
         network.ListNetwork.extend_list(mox.IsA(list), mox.IgnoreArg())
         cmd.get_client().MultipleTimes().AndReturn(self.client)
@@ -372,15 +366,11 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
         query = "router%3Aexternal=True&id=myfakeid"
         args = ['-c', 'id', '--', '--id', 'myfakeid']
         path = getattr(self.client, resources + "_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, query), self.client),
             'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token',
-                test_cli20.TOKEN)).AndReturn(
-                    (test_cli20.MyResp(200), resstr))
+            body=None).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + resources)
         shell.run_command(cmd, cmd_parser, args)
@@ -393,7 +383,7 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
                                  detail=False, tags=(),
                                  fields_1=(), fields_2=()):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         self.mox.StubOutWithMock(network.ListNetwork, "extend_list")
         network.ListNetwork.extend_list(mox.IsA(list), mox.IgnoreArg())
         cmd.get_client().MultipleTimes().AndReturn(self.client)
@@ -438,12 +428,11 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
             query = query and query + '&verbose=True' or 'verbose=True'
         path = getattr(self.client, resources + "_path")
 
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, query), self.client),
             'GET',
-            body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
+            body=None
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + resources)
@@ -579,9 +568,8 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
                 test_cli20.MyUrlComparator(test_cli20.end_url(
                     path, 'fields=id&fields=cidr' + filters), self.client),
                 'GET',
-                body=None,
-                headers=mox.ContainsKeyValue(
-                    'X-Auth-Token', test_cli20.TOKEN)).AndReturn(response)
+                authenticated=True,
+                body=None).AndReturn(response)
 
         self._test_extend_list(mox_calls)
 
@@ -606,8 +594,7 @@ class CLITestV20NetworkJSON(test_cli20.CLITestV20Base):
                             path, 'fields=id&fields=cidr%s' % filters),
                         self.client),
                     'GET',
-                    body=None,
-                    headers=mox.ContainsKeyValue(
-                        'X-Auth-Token', test_cli20.TOKEN)).AndReturn(response)
+                    authenticated=True,
+                    body=None).AndReturn(response)
 
         self._test_extend_list(mox_calls)

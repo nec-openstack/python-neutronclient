@@ -78,7 +78,7 @@ class MyApp(object):
 
 
 def end_url(path, query=None, format=FORMAT):
-    _url_str = ENDURL + "/v" + API_VERSION + path + "." + format
+    _url_str = "/v" + API_VERSION + path + "." + format
     return query and _url_str + "?" + query or _url_str
 
 
@@ -192,7 +192,6 @@ class CLITestV20Base(base.BaseTestCase):
             client.Client.EXTED_PLURALS.update(plurals)
         self.metadata = {'plurals': client.Client.EXTED_PLURALS}
         self.mox = mox.Mox()
-        self.endurl = ENDURL
         self.fake_stdout = FakeStdout()
         self.useFixture(fixtures.MonkeyPatch('sys.stdout', self.fake_stdout))
         self.useFixture(fixtures.MonkeyPatch(
@@ -204,7 +203,7 @@ class CLITestV20Base(base.BaseTestCase):
         self.useFixture(fixtures.MonkeyPatch(
             'neutronclient.v2_0.client.Client.get_attr_metadata',
             self._get_attr_metadata))
-        self.client = client.Client(token=TOKEN, endpoint_url=self.endurl)
+        self.client = client.Client(token=TOKEN, endpoint_url=ENDURL)
         self.client.format = self.format
 
     def register_non_admin_status_resource(self, resource_name):
@@ -230,7 +229,7 @@ class CLITestV20Base(base.BaseTestCase):
                               expected_exception=None,
                               **kwargs):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resource:
             cmd_resource = resource
@@ -262,11 +261,9 @@ class CLITestV20Base(base.BaseTestCase):
         mox_body = MyComparator(body, self.client)
 
         if not no_api_call:
-            self.client.httpclient.request(
+            self.client.httpclient.do_request(
                 end_url(path, format=self.format), 'POST',
-                body=mox_body,
-                headers=mox.ContainsKeyValue(
-                    'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
+                body=mox_body).AndReturn((MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser('create_' + resource)
         if expected_exception:
@@ -285,7 +282,7 @@ class CLITestV20Base(base.BaseTestCase):
                            resources_out, args=('-f', 'json'),
                            cmd_resources=None, parent_id=None):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resources:
             cmd_resources = resources
@@ -295,11 +292,9 @@ class CLITestV20Base(base.BaseTestCase):
         path = getattr(self.client, cmd_resources + "_path")
         if parent_id:
             path = path % parent_id
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(path, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
+            body=None).AndReturn((MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + cmd_resources)
         shell.run_command(cmd, cmd_parser, args)
@@ -312,7 +307,7 @@ class CLITestV20Base(base.BaseTestCase):
                              base_args=None, path=None, cmd_resources=None,
                              parent_id=None, output_format=None, query=""):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resources:
             cmd_resources = resources
@@ -389,13 +384,11 @@ class CLITestV20Base(base.BaseTestCase):
         if output_format:
             args.append('-f')
             args.append(output_format)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             MyUrlComparator(end_url(path, query, format=self.format),
                             self.client),
             'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
+            body=None).AndReturn((MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + cmd_resources)
         shell.run_command(cmd, cmd_parser, args)
@@ -411,7 +404,7 @@ class CLITestV20Base(base.BaseTestCase):
                                              cmd_resources=None,
                                              parent_id=None, query=""):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resources:
             cmd_resources = resources
@@ -428,17 +421,13 @@ class CLITestV20Base(base.BaseTestCase):
                               {'id': 'myid4', }]}
         resstr1 = self.client.serialize(reses1)
         resstr2 = self.client.serialize(reses2)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(path, query, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr1))
-        self.client.httpclient.request(
+            body=None).AndReturn((MyResp(200), resstr1))
+        self.client.httpclient.do_request(
             MyUrlComparator(end_url(path, fake_query, format=self.format),
                             self.client), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr2))
+            body=None).AndReturn((MyResp(200), resstr2))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + cmd_resources)
         args = base_args if base_args is not None else []
@@ -449,7 +438,7 @@ class CLITestV20Base(base.BaseTestCase):
     def _test_update_resource(self, resource, cmd, myid, args, extrafields,
                               cmd_resource=None, parent_id=None):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resource:
             cmd_resource = resource
@@ -462,13 +451,11 @@ class CLITestV20Base(base.BaseTestCase):
             path = path % myid
         mox_body = MyComparator(body, self.client)
 
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             MyUrlComparator(end_url(path, format=self.format),
                             self.client),
             'PUT',
-            body=mox_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), None))
+            body=mox_body).AndReturn((MyResp(204), None))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("update_" + cmd_resource)
         shell.run_command(cmd, cmd_parser, args)
@@ -480,7 +467,7 @@ class CLITestV20Base(base.BaseTestCase):
     def _test_show_resource(self, resource, cmd, myid, args, fields=(),
                             cmd_resource=None, parent_id=None):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resource:
             cmd_resource = resource
@@ -495,11 +482,9 @@ class CLITestV20Base(base.BaseTestCase):
             path = path % (parent_id, myid)
         else:
             path = path % myid
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(path, query, format=self.format), 'GET',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(200), resstr))
+            body=None).AndReturn((MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("show_" + cmd_resource)
         shell.run_command(cmd, cmd_parser, args)
@@ -512,7 +497,7 @@ class CLITestV20Base(base.BaseTestCase):
     def _test_delete_resource(self, resource, cmd, myid, args,
                               cmd_resource=None, parent_id=None):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resource:
             cmd_resource = resource
@@ -521,11 +506,9 @@ class CLITestV20Base(base.BaseTestCase):
             path = path % (parent_id, myid)
         else:
             path = path % (myid)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(path, format=self.format), 'DELETE',
-            body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), None))
+            body=None).AndReturn((MyResp(204), None))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("delete_" + cmd_resource)
         shell.run_command(cmd, cmd_parser, args)
@@ -537,17 +520,16 @@ class CLITestV20Base(base.BaseTestCase):
     def _test_update_resource_action(self, resource, cmd, myid, action, args,
                                      body, retval=None, cmd_resource=None):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         if not cmd_resource:
             cmd_resource = resource
         path = getattr(self.client, cmd_resource + "_path")
         path_action = '%s/%s' % (myid, action)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(path % path_action, format=self.format), 'PUT',
-            body=MyComparator(body, self.client),
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', TOKEN)).AndReturn((MyResp(204), retval))
+            body=MyComparator(body, self.client)
+        ).AndReturn((MyResp(204), retval))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("delete_" + cmd_resource)
         shell.run_command(cmd, cmd_parser, args)
@@ -559,7 +541,7 @@ class CLITestV20Base(base.BaseTestCase):
 
 class ClientV2TestJson(CLITestV20Base):
     def test_do_request_unicode(self):
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         unicode_text = u'\u7f51\u7edc'
         # url with unicode
         action = u'/test'
@@ -570,16 +552,11 @@ class ClientV2TestJson(CLITestV20Base):
         # request body with unicode
         body = params
         expect_body = self.client.serialize(body)
-        self.client.httpclient.auth_token = encodeutils.safe_encode(
-            unicode_text)
-        expected_auth_token = encodeutils.safe_encode(unicode_text)
 
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             end_url(expected_action, query=expect_query, format=self.format),
             'PUT', body=expect_body,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token',
-                expected_auth_token)).AndReturn((MyResp(200), expect_body))
+        ).AndReturn((MyResp(200), expect_body))
 
         self.mox.ReplayAll()
         res_body = self.client.do_request('PUT', action, body=body,
@@ -591,16 +568,15 @@ class ClientV2TestJson(CLITestV20Base):
         self.assertEqual(body, res_body)
 
     def test_do_request_error_without_response_body(self):
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         params = {'test': 'value'}
         expect_query = six.moves.urllib.parse.urlencode(params)
-        self.client.httpclient.auth_token = 'token'
+        # self.client.httpclient.auth_token = 'token'
 
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             MyUrlComparator(end_url(
                 '/test', query=expect_query, format=self.format), self.client),
-            'PUT', body='',
-            headers=mox.ContainsKeyValue('X-Auth-Token', 'token')
+            'PUT', body=''
         ).AndReturn((MyResp(400, reason='An error'), ''))
 
         self.mox.ReplayAll()
@@ -751,11 +727,9 @@ class CLITestV20ExceptionHandler(CLITestV20Base):
 
     def test_connection_failed(self):
         self.mox.StubOutWithMock(self.client.httpclient, 'request')
-        self.client.httpclient.auth_token = 'token'
 
         self.client.httpclient.request(
-            end_url('/test'), 'GET',
-            headers=mox.ContainsKeyValue('X-Auth-Token', 'token')
+            end_url('/test'), 'GET', body=None, authenticated=True
         ).AndRaise(requests.exceptions.ConnectionError('Connection refused'))
 
         self.mox.ReplayAll()

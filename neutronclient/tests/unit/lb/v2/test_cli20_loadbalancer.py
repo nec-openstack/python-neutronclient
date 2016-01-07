@@ -16,8 +16,6 @@
 
 import sys
 
-from mox3 import mox
-
 from neutronclient.neutron.v2_0.lb.v2 import loadbalancer as lb
 from neutronclient.tests.unit import test_cli20
 
@@ -141,18 +139,17 @@ class CLITestV20LbLoadBalancerJSON(test_cli20.CLITestV20Base):
         args = ['--fields', 'bytes_in', '--fields', 'bytes_out', my_id]
 
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         query = "&".join(["fields=%s" % field for field in fields])
         expected_res = {'stats': {'bytes_in': '1234', 'bytes_out': '4321'}}
         resstr = self.client.serialize(expected_res)
         path = getattr(self.client, "lbaas_loadbalancer_path_stats")
         return_tup = (test_cli20.MyResp(200), resstr)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.end_url(path % my_id, query), 'GET',
             body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', test_cli20.TOKEN)).AndReturn(return_tup)
+        ).AndReturn(return_tup)
         self.mox.ReplayAll()
 
         cmd_parser = cmd.get_parser("test_" + resource)

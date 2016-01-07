@@ -23,7 +23,6 @@ import os
 
 from keystoneauth1 import access
 from keystoneauth1 import adapter
-from keystoneauth1 import loading
 from keystoneauth1 import session as ks_session
 import os_client_config
 import requests
@@ -309,7 +308,11 @@ class SessionClient(adapter.Adapter):
     def do_request(self, url, method, **kwargs):
         kwargs.setdefault('authenticated', True)
         self._check_uri_length(url)
-        return self.request(url, method, **kwargs)
+        try:
+            return self.request(url, method, **kwargs)
+        except requests.exceptions.ConnectionError as e:
+            # For backward compatibility with HTTPClient
+            raise exceptions.ConnectionFailed(reason=e)
 
     @property
     def endpoint_url(self):

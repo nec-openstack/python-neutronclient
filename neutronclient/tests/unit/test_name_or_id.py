@@ -31,9 +31,8 @@ class CLITestNameorID(testtools.TestCase):
         """Prepare the test environment."""
         super(CLITestNameorID, self).setUp()
         self.mox = mox.Mox()
-        self.endurl = test_cli20.ENDURL
         self.client = client.Client(token=test_cli20.TOKEN,
-                                    endpoint_url=self.endurl)
+                                    endpoint_url=test_cli20.ENDURL)
         self.addCleanup(self.mox.VerifyAll)
         self.addCleanup(self.mox.UnsetStubs)
 
@@ -41,15 +40,14 @@ class CLITestNameorID(testtools.TestCase):
         _id = str(uuid.uuid4())
         reses = {'networks': [{'id': _id, }, ], }
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "networks_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&id=" + _id),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         returned_id = neutronV20.find_resourceid_by_name_or_id(
@@ -61,23 +59,21 @@ class CLITestNameorID(testtools.TestCase):
         reses = {'networks': [{'id': _id, }, ], }
         resstr = self.client.serialize(reses)
         resstr1 = self.client.serialize({'networks': []})
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "networks_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&id=" + _id),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr1))
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=" + _id),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         returned_id = neutronV20.find_resourceid_by_name_or_id(
@@ -89,15 +85,14 @@ class CLITestNameorID(testtools.TestCase):
         _id = str(uuid.uuid4())
         reses = {'networks': [{'id': _id, }, ], }
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "networks_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=" + name),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         returned_id = neutronV20.find_resourceid_by_name_or_id(
@@ -109,15 +104,14 @@ class CLITestNameorID(testtools.TestCase):
         reses = {'networks': [{'id': str(uuid.uuid4())},
                               {'id': str(uuid.uuid4())}]}
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "networks_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=" + name),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         try:
@@ -130,15 +124,14 @@ class CLITestNameorID(testtools.TestCase):
         name = 'myname'
         reses = {'networks': []}
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "networks_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=" + name),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         try:
@@ -155,15 +148,14 @@ class CLITestNameorID(testtools.TestCase):
         reses = {'security_groups':
                  [{'id': expect_id, 'tenant_id': project}]}
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "security_groups_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=%s&tenant_id=%s" %
                                          (name, project)), self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
 
@@ -178,15 +170,14 @@ class CLITestNameorID(testtools.TestCase):
         reses = {'security_groups':
                  [{'id': str(uuid.uuid4()), 'tenant_id': str(uuid.uuid4())}]}
         resstr = self.client.serialize(reses)
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         path = getattr(self.client, "security_groups_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, "fields=id&name=%s&tenant_id=%s" %
                                          (name, project)), self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
 

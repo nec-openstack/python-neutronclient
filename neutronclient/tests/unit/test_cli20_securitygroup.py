@@ -282,10 +282,8 @@ class CLITestV20SecurityGroupsJSON(test_cli20.CLITestV20Base):
                 test_cli20.MyUrlComparator(test_cli20.end_url(
                     path, responses[0]['filter']), self.client),
                 'GET',
-                body=None,
-                headers=mox.ContainsKeyValue(
-                    'X-Auth-Token', test_cli20.TOKEN)).AndReturn(
-                        responses[0]['response'])
+                authenticated=True,
+                body=None).AndReturn(responses[0]['response'])
 
         data = [{'name': 'default',
                  'remote_group_id': 'remgroupid%02d' % i}
@@ -308,10 +306,8 @@ class CLITestV20SecurityGroupsJSON(test_cli20.CLITestV20Base):
                 self.client.httpclient.request(
                     test_cli20.end_url(path, item['filter']),
                     'GET',
-                    body=None,
-                    headers=mox.ContainsKeyValue(
-                        'X-Auth-Token', test_cli20.TOKEN)).AndReturn(
-                            item['response'])
+                    authenticated=True,
+                    body=None).AndReturn(item['response'])
 
         data = [{'name': 'default',
                  'security_group_id': 'secgroupid%02d' % i,
@@ -375,9 +371,8 @@ class CLITestV20SecurityGroupsJSON(test_cli20.CLITestV20Base):
                     test_cli20.end_url(path, query),
                     self.client),
                 'GET',
-                body=None,
-                headers=mox.ContainsKeyValue(
-                    'X-Auth-Token', test_cli20.TOKEN)).AndReturn(resp)
+                authenticated=True,
+                body=None).AndReturn(resp)
 
         cmd = securitygroup.ListSecurityGroupRule(
             test_cli20.MyApp(sys.stdout), None)

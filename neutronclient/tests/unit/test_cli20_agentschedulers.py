@@ -35,16 +35,15 @@ class CLITestV20AgentScheduler(test_cli20.CLITestV20Base):
                 cmd_args[0])
 
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         result_str = self.client.serialize(result)
         return_tup = (test_cli20.MyResp(200), result_str)
 
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.end_url(path), 'POST',
             body=test_cli20.MyComparator(body, self.client),
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', test_cli20.TOKEN)).AndReturn(return_tup)
+        ).AndReturn(return_tup)
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser('test_' + resource)
         parsed_args = cmd_parser.parse_args(cmd_args)
@@ -56,15 +55,14 @@ class CLITestV20AgentScheduler(test_cli20.CLITestV20Base):
         path = ((self.client.agent_path + destination + '/%s') %
                 cmd_args)
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
 
         return_tup = (test_cli20.MyResp(204), None)
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.end_url(path), 'DELETE',
             body=None,
-            headers=mox.ContainsKeyValue(
-                'X-Auth-Token', test_cli20.TOKEN)).AndReturn(return_tup)
+        ).AndReturn(return_tup)
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser('test_' + resource)
         parsed_args = cmd_parser.parse_args(cmd_args)

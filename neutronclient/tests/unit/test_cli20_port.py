@@ -17,8 +17,6 @@
 import itertools
 import sys
 
-from mox3 import mox
-
 from neutronclient.neutron.v2_0 import port
 from neutronclient import shell
 from neutronclient.tests.unit import test_cli20
@@ -426,7 +424,7 @@ class CLITestV20PortJSON(test_cli20.CLITestV20Base):
                                myid, detail=False, tags=(),
                                fields_1=(), fields_2=()):
         self.mox.StubOutWithMock(cmd, "get_client")
-        self.mox.StubOutWithMock(self.client.httpclient, "request")
+        self.mox.StubOutWithMock(self.client.httpclient, "do_request")
         cmd.get_client().MultipleTimes().AndReturn(self.client)
         reses = {resources: [{'id': 'myid1', },
                              {'id': 'myid2', }, ], }
@@ -468,13 +466,12 @@ class CLITestV20PortJSON(test_cli20.CLITestV20Base):
             query = query and query + '&verbose=True' or 'verbose=True'
         query = query and query + '&device_id=%s' or 'device_id=%s'
         path = getattr(self.client, resources + "_path")
-        self.client.httpclient.request(
+        self.client.httpclient.do_request(
             test_cli20.MyUrlComparator(
                 test_cli20.end_url(path, query % myid),
                 self.client),
             'GET',
             body=None,
-            headers=mox.ContainsKeyValue('X-Auth-Token', test_cli20.TOKEN)
         ).AndReturn((test_cli20.MyResp(200), resstr))
         self.mox.ReplayAll()
         cmd_parser = cmd.get_parser("list_" + resources)
