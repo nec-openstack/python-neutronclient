@@ -23,6 +23,7 @@ import os
 
 from keystoneauth1 import access
 from keystoneauth1 import adapter
+from keystoneauth1 import loading
 from keystoneauth1 import session as ks_session
 import os_client_config
 import requests
@@ -377,13 +378,19 @@ def construct_http_client(username=None,
                              region_name=region_name,
                              **kwargs)
     elif auth_strategy == 'keystone':
-        # TODO(amotoki): support token and endpoint_url
         # NOTE: Ignore log_credentials. Use the default behavior of Session.
         if cloud is None:
             cloud = ''
         verify = kwargs.get('verify', not insecure)
         cert = kwargs.get('cert', ca_cert)
-        kwargs.setdefault('interface', endpoint_type)
+
+        config_params = kwargs.copy()
+        config_params.setdefault('interface', endpoint_type)
+        if token and endpoint_url:
+            config_params.setdefault('auth_type', 'admin_token')
+            config_params['url'] = endpoint_url
+            config_params['token'] = token
+
         cloud_config = os_client_config.OpenStackConfig().get_one_cloud(
             cloud=cloud,
             username=username,
@@ -395,7 +402,7 @@ def construct_http_client(username=None,
             region_name=region_name,
             verify=verify,
             cert=ca_cert,
-            **kwargs)
+            **config_params)
         verify, cert = cloud_config.get_requests_verify_args()
         auth = cloud_config.get_auth()
         auth_session = ks_session.Session(auth=auth,
